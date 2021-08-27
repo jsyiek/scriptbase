@@ -15,6 +15,12 @@ this_logger = logging.getLogger(__loader__.name)
 ARTIST_X_RANGE = range(140, 320)
 ARTIST_Y_RANGE = range(990, 1013)
 
+ARTIST_X_RANGE_POST_MPC_READY = range(103, 342)
+ARTIST_Y_RANGE_POST_MPC_READY = range(1018, 1040)
+
+ARTIST_X_RANGE_PLANESWALKER_POST_MPC_READY = range(80, 130)
+ARTIST_Y_RANGE_PLANESWALKER_POST_MPC_READY = range(1005, 1030)
+
 COPYRIGHT_X_RANGE = range(440, 698)
 COPYRIGHT_Y_RANGE_CREATURE = range(986, 1000)
 COPYRIGHT_Y_RANGE_NONCREATURE = range(969, 984)
@@ -41,7 +47,8 @@ def parse_args():
                         nargs='+')
     parser.add_argument("-c", "--cockatrice-xml", help="More accurately erase copyright by passing a cockatrice XML "
                                                        "of the set")
-    parser.add_argument("-r", "--regex-name-match", help="Fancy name matching to extract a card name from a file name",
+    parser.add_argument("-r", "--regex-name-match", help="Fancy name matching to extract a card name from a file name, "
+                                                         "e.g. [\d]+_(.+)",
                         default="(.+)")
     parser.add_argument("--corner-scrub-color", nargs="+", type=int,
                         help="Color to scrub the corners with as RGB(A), only used if -R is set", default=[0, 0, 0])
@@ -119,14 +126,15 @@ def main():
             if cockatrice_database is not None:
                 card = cockatrice_database.card_data.get(card_name)
                 if card is not None:
-                    card_is_creature = card.type.lower() == "creature"
+                    card_is_creature = card.type.lower() == "creature" or card.type.lower() == "planeswalker"
 
             if args.scrub_artist:
-                image_utils.scrub(im, ((x, y) for x in ARTIST_X_RANGE for y in ARTIST_Y_RANGE))
+                image_utils.scrub(im, ((x, y) for x in ARTIST_X_RANGE_POST_MPC_READY for y in ARTIST_Y_RANGE_POST_MPC_READY))
 
             if args.scrub_copyright:
                 if card_is_creature:
-                    this_logger.info(f"--- Inputted file is a creature, using a different range for removing "
+                    this_logger.info(f"--- Inputted file is a creature or planeswalker, "
+                                     f"using a different range for removing "
                                      f"copyright ---")
                     image_utils.scrub(im, ((x, y) for x in COPYRIGHT_X_RANGE for y in COPYRIGHT_Y_RANGE_CREATURE))
                 else:
@@ -143,7 +151,7 @@ def main():
             if args.scrub_not_for_sale:
                 image_utils.scrub(im, ((x, y) for x in NOT_FOR_SALE_X_RANGE for y in NOT_FOR_SALE_Y_RANGE))
 
-            im = image_utils.resize_canvas(im, *MPC_ADJUSTED_DIMENSIONS, new_background=(0, 0, 0) if len(im.mode) == 3 else (0, 0, 0, 255))
+            #im = image_utils.resize_canvas(im, *MPC_ADJUSTED_DIMENSIONS, new_background=(0, 0, 0) if len(im.mode) == 3 else (0, 0, 0, 255))
             im.save(os.path.join(args.output, os.path.basename(im_filename)) + ".png")
             im.close()
 
