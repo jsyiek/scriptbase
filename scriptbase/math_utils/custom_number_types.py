@@ -21,6 +21,9 @@ class ComplexExI:
         self.real = fractions.Fraction(real)
         self.imag = fractions.Fraction(imaginary)
 
+    def __repr__(self):
+        return f"{self.real}" if self.real or not self.imag else "" + f"{self.imag}i" if imag else ""
+
     def __add__(self, other: Union[fractions.Fraction, float, int, complex, 'ComplexExI']) -> 'ComplexExI':
         """
         Adds two complex numbers together and returns a new object
@@ -89,3 +92,8 @@ class ComplexExI:
         """
         denominator = self.real ** 2 - self.imag ** 2
         return self.conj()/denominator
+
+## Tests
+comp_one = ComplexExI(3, 2)
+comp_exp = comp_one ** 3
+print(comp_exp)
