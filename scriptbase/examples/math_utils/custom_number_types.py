@@ -22,7 +22,7 @@ class ComplexExI:
         self.imag = fractions.Fraction(imaginary)
 
     def __repr__(self):
-        return f"{self.real}" if self.real or not self.imag else "" + f"{self.imag}i" if imag else ""
+        return (f"{self.real}" if self.real or not self.imag else "") + (" + " if self.imag and self.real else "") + (f"{self.imag}i" if self.imag else "")
 
     def __add__(self, other: Union[fractions.Fraction, float, int, complex, 'ComplexExI']) -> 'ComplexExI':
         """
@@ -32,6 +32,12 @@ class ComplexExI:
             other = ComplexExI(other)
         return ComplexExI(real=self.real + other.real,
                           imaginary=self.imag + other.imag)
+
+    def __sub__(self, other: Union[fractions.Fraction, float, int, complex, 'ComplexExI']):
+        """
+        Subtracts two complex numbers together and returns a new object
+        """
+        return self.__add__(other * -1)
 
     def __mul__(self, other: Union[fractions.Fraction, float, int, complex, 'ComplexExI']) -> 'ComplexExI':
         """
@@ -47,7 +53,9 @@ class ComplexExI:
         Divides two complex numbers and returns a new object
         """
         if not (isinstance(other, ComplexExI) or isinstance(other, complex)):
-            other = ComplexExI(other)
+            ## If it's no complex, no further analysis necessary
+            return ComplexExI(real=self.real/other,
+                              imaginary=self.imag/other)
         elif isinstance(other, complex):
             other = ComplexExI(other.real, other.imag)
 
@@ -93,7 +101,25 @@ class ComplexExI:
         denominator = self.real ** 2 - self.imag ** 2
         return self.conj()/denominator
 
+    def as_float_string(self, decimal_places: Union[int, float] = None):
+        """
+        Returns a string representing the complex number as a float
+
+        Parameters:
+            decimal_places (Union[int, float]): Number of DP to round to
+
+        Returns:
+            float_str (str): the same as __repr__ but with floats instead of fractions
+        """
+        if decimal_places is None:
+            return (f"{float(self.real)}" if self.real or not self.imag else "") + (" + " if self.imag and self.real else "") + (f"{float(self.imag)}i" if self.imag else "")
+        else:
+            return (f"{round(float(self.real), decimal_places)}" if self.real or not self.imag else "") \
+                   + (" + " if self.imag and self.real else "") \
+                   + (f"{round(float(self.imag), decimal_places)}i" if self.imag else "")
+
 ## Tests
 comp_one = ComplexExI(3, 2)
-comp_exp = comp_one ** 3
-print(comp_exp)
+comp_two = ComplexExI(-1, 4)
+comp_exp = ((comp_one / comp_two) ** 3) * comp_two * comp_one
+print(comp_exp.as_float_string(3))
