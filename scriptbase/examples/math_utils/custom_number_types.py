@@ -65,7 +65,7 @@ class ComplexExI:
         """
         Raises the complex number to a power and returns a new object
         """
-        modulus = (self.real ** 2 + self.imag ** 2) ** 0.5
+        modulus = self.mag()
         if self.real >= 0:
             ## qquads 1 and 4 has arctan compatibility
             theta = math.atan(self.imag/self.real)
@@ -101,7 +101,16 @@ class ComplexExI:
         denominator = self.real ** 2 - self.imag ** 2
         return self.conj()/denominator
 
-    def as_float_string(self, decimal_places: Union[int, float] = None):
+    def mag(self) -> float:
+        """
+        Returns the magnitude of the complex number
+
+        Returns:
+            magnitude (float): Magnitude of the complex number
+        """
+        return (self.real ** 2 + self.imag ** 2) ** 0.5
+
+    def as_float_string(self, decimal_places: Union[int, float] = None) -> str:
         """
         Returns a string representing the complex number as a float
 
