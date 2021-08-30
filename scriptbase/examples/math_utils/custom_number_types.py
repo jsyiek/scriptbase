@@ -61,13 +61,13 @@ class ComplexExI:
 
         return self.__mul__(other.inverse())
 
-    def __pow__(self, other: Union[int, float]):
+    def __pow__(self, other: Union[int, float, 'ComplexExI']):
         """
         Raises the complex number to a power and returns a new object
         """
         modulus = self.mag()
         if self.real >= 0:
-            ## qquads 1 and 4 has arctan compatibility
+            ## quads 1 and 4 has arctan compatibility
             theta = math.atan(self.imag/self.real)
         elif self.real <= 0 and self.imag >= 0:
             ## If in quad 2 we can use acos because it has range over that
@@ -76,8 +76,16 @@ class ComplexExI:
             ## this is the oddball case of quad 3
             theta = math.acos(self.imag/self.real) - math.pi
 
-        ## Euler's formula
-        theta, modulus = theta * other, modulus ** other
+        ## other might be a complex number, so need to adjust the power to do that
+        ## we can do this with some power math on the e
+        ## also important that we keep track of the modulus here in the real category... e.g. k * e^(ix) = e^(ln(k) + ix)
+        if isinstance(other, ComplexExI) or isinstance(other, complex):
+            new_power = ComplexExI(real=math.log(modulus), imaginary=theta) * other
+            print(new_power.as_float_string())
+            modulus, theta = math.e ** new_power.real, new_power.imag
+        else:
+            ## Euler's formula
+            theta, modulus = theta * other, modulus ** other
         return ComplexExI(real=modulus * math.cos(theta),
                           imaginary=modulus * math.sin(theta))
 
@@ -86,7 +94,7 @@ class ComplexExI:
         Returns a new complex object that represents the conjugate of this complex #
 
         Returns:
-            conjugate (Complex): New Complex obj representing the conj of the current one
+            conjugate (ComplexExI): New Complex obj representing the conj of the current one
         """
         return ComplexExI(real=self.real,
                           imaginary=-1 * self.imag)
@@ -96,7 +104,7 @@ class ComplexExI:
         Returns a new complex object representing 1 over this object
 
         Returns:
-            inverse (Complex): New Complex obj representing inverse of the current one
+            inverse (ComplexExI): New Complex obj representing inverse of the current one
         """
         denominator = self.real ** 2 - self.imag ** 2
         return self.conj()/denominator
@@ -130,5 +138,5 @@ class ComplexExI:
 ## Tests
 comp_one = ComplexExI(3, 2)
 comp_two = ComplexExI(-1, 4)
-comp_exp = ((comp_one / comp_two) ** 3) * comp_two * comp_one
-print(comp_exp.as_float_string(3))
+comp_exp = comp_one ** comp_two
+print(comp_exp.as_float_string(5))
