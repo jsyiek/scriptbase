@@ -89,6 +89,7 @@ class ComplexExI:
         return ComplexExI(real=modulus * math.cos(theta),
                           imaginary=modulus * math.sin(theta))
 
+    @property
     def conj(self) -> 'ComplexExI':
         """
         Returns a new complex object that represents the conjugate of this complex #
@@ -107,7 +108,7 @@ class ComplexExI:
             inverse (ComplexExI): New Complex obj representing inverse of the current one
         """
         denominator = self.real ** 2 - self.imag ** 2
-        return self.conj()/denominator
+        return self.conj/denominator
 
     def mag(self) -> float:
         """
