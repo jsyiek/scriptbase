@@ -157,6 +157,7 @@ class ComplexExI:
                    + (" + " if self.imag and self.real else "") \
                    + (f"{round(float(self.imag), decimal_places)}i" if self.imag else "")
 
+
 ## Tests
 comp_one = ComplexExI(3, 2)
 comp_two = ComplexExI(-1, 4)
