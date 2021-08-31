@@ -21,8 +21,12 @@ class ComplexExI:
         self.real = fractions.Fraction(real)
         self.imag = fractions.Fraction(imaginary)
 
-    def __repr__(self):
-        return (f"{self.real}" if self.real or not self.imag else "") + (" + " if self.imag and self.real else "") + (f"{self.imag}i" if self.imag else "")
+    def __repr__(self) -> str:
+        """
+        Representation of the complex number. Displays as fraction.
+        """
+        return (f"{self.real}" if self.real or not self.imag else "") + (" + " if self.imag and self.real else "") + \
+               (f"{self.imag}i" if self.imag else "")
 
     def __add__(self, other: Union[fractions.Fraction, float, int, complex, 'ComplexExI']) -> 'ComplexExI':
         """
@@ -33,7 +37,7 @@ class ComplexExI:
         return ComplexExI(real=self.real + other.real,
                           imaginary=self.imag + other.imag)
 
-    def __sub__(self, other: Union[fractions.Fraction, float, int, complex, 'ComplexExI']):
+    def __sub__(self, other: Union[fractions.Fraction, float, int, complex, 'ComplexExI']) -> 'ComplexExI':
         """
         Subtracts two complex numbers together and returns a new object
         """
@@ -61,27 +65,21 @@ class ComplexExI:
 
         return self.__mul__(other.inverse())
 
-    def __pow__(self, other: Union[int, float, 'ComplexExI']):
+    def __pow__(self, other: Union[int, float, 'ComplexExI']) -> 'ComplexExI':
         """
         Raises the complex number to a power and returns a new object
         """
-        modulus = self.mag()
-        if self.real >= 0:
-            ## quads 1 and 4 has arctan compatibility
-            theta = math.atan(self.imag/self.real)
-        elif self.real <= 0 and self.imag >= 0:
-            ## If in quad 2 we can use acos because it has range over that
-            theta = math.acos(self.real/modulus)
-        else:
-            ## this is the oddball case of quad 3
-            theta = math.acos(self.imag/self.real) - math.pi
+        modulus = self.mag
+        theta = self.arg
+        if theta is None:
+            ## to avoid type errors; if theta is None then modulus must be 0
+            theta = 0
 
         ## other might be a complex number, so need to adjust the power to do that
         ## we can do this with some power math on the e
         ## also important that we keep track of the modulus here in the real category... e.g. k * e^(ix) = e^(ln(k) + ix)
         if isinstance(other, ComplexExI) or isinstance(other, complex):
             new_power = ComplexExI(real=math.log(modulus), imaginary=theta) * other
-            print(new_power.as_float_string())
             modulus, theta = math.e ** new_power.real, new_power.imag
         else:
             ## Euler's formula
@@ -90,15 +88,45 @@ class ComplexExI:
                           imaginary=modulus * math.sin(theta))
 
     @property
+    def arg(self) -> Union[float, None]:
+        """
+        Returns the argument of the complex number, or None if the arg isn't defined
+
+        Returns:
+            arg (Union[float, None]): Floating point number representing the arg of the complex number
+        """
+        if self.real == 0 and self.imag == 0:
+            return None
+        elif self.real >= 0:
+            ## quads 1 and 4 has arctan compatibility
+            return math.atan(self.imag/self.real)
+        elif self.real <= 0 and self.imag >= 0:
+            ## If in quad 2 we can use acos because it has range over that
+            return math.acos(self.real/self.mag)
+        else:
+            ## this is the oddball case of quad 3
+            return math.acos(self.imag/self.real) - math.pi
+
+    @property
     def conj(self) -> 'ComplexExI':
         """
-        Returns a new complex object that represents the conjugate of this complex #
+        Creates a new complex object that represents the conjugate of this complex #
 
         Returns:
             conjugate (ComplexExI): New Complex obj representing the conj of the current one
         """
         return ComplexExI(real=self.real,
                           imaginary=-1 * self.imag)
+
+    @property
+    def mag(self) -> float:
+        """
+        Calculates the magnitude of the complex number
+
+        Returns:
+            magnitude (float): Magnitude of the complex number
+        """
+        return (self.real ** 2 + self.imag ** 2) ** 0.5
 
     def inverse(self) -> 'ComplexExI':
         """
@@ -109,15 +137,6 @@ class ComplexExI:
         """
         denominator = self.real ** 2 - self.imag ** 2
         return self.conj/denominator
-
-    def mag(self) -> float:
-        """
-        Returns the magnitude of the complex number
-
-        Returns:
-            magnitude (float): Magnitude of the complex number
-        """
-        return (self.real ** 2 + self.imag ** 2) ** 0.5
 
     def as_float_string(self, decimal_places: Union[int, float] = None) -> str:
         """
