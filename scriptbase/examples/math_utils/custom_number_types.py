@@ -25,8 +25,8 @@ class ComplexExI:
         """
         Representation of the complex number. Displays as fraction.
         """
-        return (f"{self.real}" if self.real or not self.imag else "") + (" + " if self.imag and self.real else "") + \
-               (f"{self.imag}i" if self.imag else "")
+        return (f"{self.real}" if self.real or not self.imag else "") + (" + " if self.imag and self.real else "") \
+               + (f"{self.imag}i" if self.imag else "")
 
     def __add__(self, other: Union[fractions.Fraction, float, int, complex, 'ComplexExI']) -> 'ComplexExI':
         """
@@ -149,7 +149,9 @@ class ComplexExI:
             float_str (str): the same as __repr__ but with floats instead of fractions
         """
         if decimal_places is None:
-            return (f"{float(self.real)}" if self.real or not self.imag else "") + (" + " if self.imag and self.real else "") + (f"{float(self.imag)}i" if self.imag else "")
+            return (f"{float(self.real)}" if self.real or not self.imag else "") \
+                   + (" + " if self.imag and self.real else "") \
+                   + (f"{float(self.imag)}i" if self.imag else "")
         else:
             return (f"{round(float(self.real), decimal_places)}" if self.real or not self.imag else "") \
                    + (" + " if self.imag and self.real else "") \
