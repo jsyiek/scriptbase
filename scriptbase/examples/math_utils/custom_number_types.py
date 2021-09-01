@@ -1,7 +1,7 @@
 import fractions
 import math
 
-from typing import Union
+from typing import Iterator, Union
 
 
 class ComplexExI:
@@ -20,6 +20,22 @@ class ComplexExI:
 
         self.real = fractions.Fraction(real)
         self.imag = fractions.Fraction(imaginary)
+
+    @classmethod
+    def from_mod_arg(cls,
+                     modulus: Union[fractions.Fraction, float, int],
+                     arg: Union[fractions.Fraction, float, int]) -> 'ComplexExI':
+        """
+        Assembles a ComplexExI object from modulus & argument
+
+        Parameters:
+            modulus (Union[fractions.Fraction, float, int]): Magnitude/modulus of the number
+            arg (Union[fractions.Fraction, float, int]): Arg/theta of the number
+
+        Returns:
+            complex_number (ComplexExI): Complex number representation based on input info
+        """
+        return cls(real=modulus * math.cos(arg), imaginary=modulus * math.sin(arg))
 
     def __repr__(self) -> str:
         """
@@ -68,6 +84,8 @@ class ComplexExI:
     def __pow__(self, other: Union[int, float, 'ComplexExI']) -> 'ComplexExI':
         """
         Raises the complex number to a power and returns a new object
+
+        If you are taking a root, it's worth using the roots_of_unity method rather than explicitly using exponentiation
         """
         modulus = self.mag
         theta = self.arg
@@ -84,8 +102,7 @@ class ComplexExI:
         else:
             ## Euler's formula
             theta, modulus = theta * other, modulus ** other
-        return ComplexExI(real=modulus * math.cos(theta),
-                          imaginary=modulus * math.sin(theta))
+        return self.from_mod_arg(modulus=modulus, arg=theta)
 
     @property
     def arg(self) -> Union[float, None]:
@@ -128,16 +145,6 @@ class ComplexExI:
         """
         return (self.real ** 2 + self.imag ** 2) ** 0.5
 
-    def inverse(self) -> 'ComplexExI':
-        """
-        Returns a new complex object representing 1 over this object
-
-        Returns:
-            inverse (ComplexExI): New Complex obj representing inverse of the current one
-        """
-        denominator = self.real ** 2 - self.imag ** 2
-        return self.conj/denominator
-
     def as_float_string(self, decimal_places: Union[int, float] = None) -> str:
         """
         Returns a string representing the complex number as a float
@@ -157,9 +164,53 @@ class ComplexExI:
                    + (" + " if self.imag and self.real else "") \
                    + (f"{round(float(self.imag), decimal_places)}i" if self.imag else "")
 
+    def inverse(self) -> 'ComplexExI':
+        """
+        Returns a new complex object representing 1 over this object
+
+        Returns:
+            inverse (ComplexExI): New Complex obj representing inverse of the current one
+        """
+        denominator = self.real ** 2 - self.imag ** 2
+        return self.conj/denominator
+
+    def roots_of_unity(self, n: Union[int, float, fractions.Fraction]) -> Iterator['ComplexExI']:
+        """
+        Calculates the nth roots of unity.
+
+        Parameters:
+            n (Union[int, float, fractions.Fraction]): The nth roots of unity to find, equivalent to C ** (1/n)
+
+        Yields:
+            Roots of Unity ('ComplexExI')
+
+        Returns:
+            None
+        """
+
+        rationalized = fractions.Fraction(n)
+
+
+        ## raise to the denominator (remember n is the n from 1/n, so the num/denom are flipped)
+        new_number = self ** rationalized.denominator
+
+        ## We only need the numerator
+        n = rationalized.numerator
+        modulus = new_number.mag ** (1/n)
+        new_num_arg_over_n = new_number.arg / n
+
+        i = 0
+        while i != n:
+
+            arg = new_num_arg_over_n + 2 * math.pi * (i + 1) / n
+            yield new_number.from_mod_arg(modulus, arg)
+
+            i += 1
+
 
 ## Tests
 comp_one = ComplexExI(3, 2)
 comp_two = ComplexExI(-1, 4)
-comp_exp = comp_one ** comp_two
-print(comp_exp.as_float_string(5))
+comp_exp = comp_one.roots_of_unity(5)
+for res in comp_exp:
+    print(res.as_float_string(5))
