@@ -26,7 +26,7 @@ class ComplexExI:
                      modulus: Union[fractions.Fraction, float, int],
                      arg: Union[fractions.Fraction, float, int]) -> 'ComplexExI':
         """
-        Assembles a ComplexExI object from modulus & argument
+        Assembles a ComplexExI object from modulus & argument; an alternative constructor
 
         Parameters:
             modulus (Union[fractions.Fraction, float, int]): Magnitude/modulus of the number
@@ -111,13 +111,17 @@ class ComplexExI:
 
         Returns:
             arg (Union[float, None]): Floating point number representing the arg of the complex number
+                                      (None if the arg isn't defined - i.e. self.real = 0 and self.imag = 0
         """
-        if self.real == 0 and self.imag == 0:
-            return None
-        elif self.real >= 0:
+        if self.real == 0:
+            if self.imag == 0:
+                return None
+            else:
+                return 1 if self.imag > 0 else -1
+        elif self.real > 0:
             ## quads 1 and 4 has arctan compatibility
             return math.atan(self.imag/self.real)
-        elif self.real <= 0 and self.imag >= 0:
+        elif self.real < 0 and self.imag >= 0:
             ## If in quad 2 we can use acos because it has range over that
             return math.acos(self.real/self.mag)
         else:
