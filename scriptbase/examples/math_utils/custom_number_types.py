@@ -194,7 +194,6 @@ class ComplexExI:
 
         rationalized = fractions.Fraction(n)
 
-
         ## raise to the denominator (remember n is the n from 1/n, so the num/denom are flipped)
         new_number = self ** rationalized.denominator
 
@@ -215,6 +214,7 @@ class ComplexExI:
 ## Tests
 comp_one = ComplexExI(3, 2)
 comp_two = ComplexExI(-1, 4)
-comp_exp = comp_one.roots_of_unity(5)
+comp_three = ComplexExI(1, 0)
+comp_exp = comp_three.roots_of_unity(1024)
 for res in comp_exp:
     print(res.as_float_string(5))
