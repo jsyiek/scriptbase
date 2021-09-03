@@ -8,12 +8,6 @@ let compare_years y_one y_two =
 
 exception ExceedsTimeRange;;
 
-let combine_years y_one add =
-	if add > 0 then add_years y_one add
-	else if add < 0 then sub_years y_one add
-	else y_one
-;;
-
 let rec add_years y_one add =
 	let combine = y_one + add in 
 	if y_one <= 49 && combine > 50 || add >= 100 then raise ExceedsTimeRange
@@ -26,6 +20,12 @@ let rec sub_years y_one sub =
 	if y_one >= 50 && combine < 50 || sub <= -100 then raise ExceedsTimeRange
 	else if y_one <= 49 && combine < 0 then sub_years (combine + 100) 0
 	else combine 
+;;
+
+let combine_years y_one add =
+	if add > 0 then add_years y_one add
+	else if add < 0 then sub_years y_one add
+	else y_one
 ;;
 
 let rec additive_mult x n =
@@ -42,4 +42,9 @@ let rec additive_mult_for x n =
 			return := x +. !return
 		done;
 		!return
+;;
+
+let rec golden_ratio ratio n = 
+	if n = 0 then ratio 
+	else golden_ratio (1. /. (ratio -. 1.)) (n - 1)
 ;;
