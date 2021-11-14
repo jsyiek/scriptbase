@@ -3,11 +3,10 @@ import logging
 import os
 from PIL import Image
 import re
-import tempfile
 
-import scriptbase.file_handling.file_utils as file_utils
-import scriptbase.file_handling.image_utils as image_utils
-import scriptbase.magic_the_gathering.cockatrice as cockatrice
+import scriptbase.utils.file_handling.file_utils as file_utils
+import scriptbase.utils.file_handling.image_utils as image_utils
+import scriptbase.utils.magic_the_gathering.cockatrice as cockatrice
 
 this_logger = logging.getLogger(__loader__.name)
 
