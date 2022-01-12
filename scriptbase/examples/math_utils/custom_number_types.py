@@ -73,7 +73,7 @@ class ComplexExI:
         Divides two complex numbers and returns a new object
         """
         if not (isinstance(other, ComplexExI) or isinstance(other, complex)):
-            ## If it's no complex, no further analysis necessary
+            # If it's no complex, no further analysis necessary
             return ComplexExI(real=self.real/other,
                               imaginary=self.imag/other)
         elif isinstance(other, complex):
@@ -90,17 +90,17 @@ class ComplexExI:
         modulus = self.mag
         theta = self.arg
         if theta is None:
-            ## to avoid type errors; if theta is None then modulus must be 0
+            # to avoid type errors; if theta is None then modulus must be 0
             theta = 0
 
-        ## other might be a complex number, so need to adjust the power to do that
-        ## we can do this with some power math on the e
-        ## also important that we keep track of the modulus here in the real category... e.g. k * e^(ix) = e^(ln(k) + ix)
+        # other might be a complex number, so need to adjust the power to do that
+        # we can do this with some power math on the e
+        # also important that we keep track of the modulus here in the real category... e.g. k * e^(ix) = e^(ln(k) + ix)
         if isinstance(other, ComplexExI) or isinstance(other, complex):
             new_power = ComplexExI(real=math.log(modulus), imaginary=theta) * other
             modulus, theta = math.e ** new_power.real, new_power.imag
         else:
-            ## Euler's formula
+            # Euler's formula
             theta, modulus = theta * other, modulus ** other
         return self.from_mod_arg(modulus=modulus, arg=theta)
 
@@ -119,25 +119,14 @@ class ComplexExI:
             else:
                 return 1 if self.imag > 0 else -1
         elif self.real > 0:
-            ## quads 1 and 4 has arctan compatibility
+            # quads 1 and 4 has arctan compatibility
             return math.atan(self.imag/self.real)
         elif self.real < 0 and self.imag >= 0:
-            ## If in quad 2 we can use acos because it has range over that
+            # If in quad 2 we can use acos because it has range over that
             return math.acos(self.real/self.mag)
         else:
-            ## this is the oddball case of quad 3
+            # this is the oddball case of quad 3
             return math.acos(self.imag/self.real) - math.pi
-
-    @property
-    def conj(self) -> 'ComplexExI':
-        """
-        Creates a new complex object that represents the conjugate of this complex #
-
-        Returns:
-            conjugate (ComplexExI): New Complex obj representing the conj of the current one
-        """
-        return ComplexExI(real=self.real,
-                          imaginary=-1 * self.imag)
 
     @property
     def mag(self) -> float:
@@ -148,6 +137,29 @@ class ComplexExI:
             magnitude (float): Magnitude of the complex number
         """
         return (self.real ** 2 + self.imag ** 2) ** 0.5
+
+    @mag.setter
+    def mag(self, magnitude: Union[fractions.Fraction, int, float]):
+        """
+        Scales the real and imag properties to have the
+        input magnitude
+
+        Parameters:
+            magnitude (Union[fractions.Fraction, int, float]): Magnitude to use
+        """
+        scale_factor = fractions.Fraction(magnitude) / self.mag
+        self.real *= scale_factor
+        self.imag *= scale_factor
+
+    def conj(self) -> 'ComplexExI':
+        """
+        Creates a new complex object that represents the conjugate of this complex #
+
+        Returns:
+            conjugate (ComplexExI): New Complex obj representing the conj of the current one
+        """
+        return ComplexExI(real=self.real,
+                          imaginary=-1 * self.imag)
 
     def as_float_string(self, decimal_places: Union[int, float] = None) -> str:
         """
@@ -194,10 +206,10 @@ class ComplexExI:
 
         rationalized = fractions.Fraction(n)
 
-        ## raise to the denominator (remember n is the n from 1/n, so the num/denom are flipped)
+        # raise to the denominator (remember n is the n from 1/n, so the num/denom are flipped)
         new_number = self ** rationalized.denominator
 
-        ## We only need the numerator
+        # We only need the numerator
         n = rationalized.numerator
         modulus = new_number.mag ** (1/n)
         new_num_arg_over_n = new_number.arg / n
@@ -211,10 +223,12 @@ class ComplexExI:
             i += 1
 
 
-## Tests
+# Tests
 comp_one = ComplexExI(3, 2)
 comp_two = ComplexExI(-1, 4)
 comp_three = ComplexExI(1, 0)
-comp_exp = comp_three.roots_of_unity(1024)
-for res in comp_exp:
-    print(res.as_float_string(5))
+comp_three.mag = 10
+comp_one.mag = 5
+#comp_exp = comp_three.roots_of_unity(1024)
+#for res in comp_exp:
+#    print(res.as_float_string(5))
