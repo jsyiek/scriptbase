@@ -16,6 +16,7 @@ setuptools.setup(
     entry_points={
         'console_scripts': [
             "mtg_to_mpc = scriptbase.scripts.mtg.mtgdesign_to_mpc:main",
+            "deceptive_domain_score = scriptbase.scripts.cybersecurity.deceptive_domain_score:main"
         ],
     },
 )

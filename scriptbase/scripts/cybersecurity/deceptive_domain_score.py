@@ -1,9 +1,11 @@
 import argparse
 import logging
+import os
 import re
 
 from typing import Iterator, List, Tuple
 
+from scriptbase import SCRIPTBASE_DIRECTORY
 import scriptbase.utils.algorithms.edit_distance as edit_distance
 import scriptbase.utils.file_handling.file_utils as file_utils
 
@@ -18,7 +20,8 @@ def parse_args():
     parser = argparse.ArgumentParser(description="Computes the deceptive domain score for a given domain.")
 
     parser.add_argument("-d", "--domain", help="Domain name to compute score for", required=True)
-    parser.add_argument("-c", "--company-data", help="Company data to compare against", required=True)
+    parser.add_argument("-c", "--company-data", help="Company data to compare against",
+                        default=os.path.join(SCRIPTBASE_DIRECTORY, "examples/demo_files/company_data.csv"))
 
     return parser.parse_args()
 
@@ -115,6 +118,12 @@ def phish_target_score(domain_to_check: Tuple[str, str], company_data: List[Tupl
 
     ...against a company data consisting of a list of tuples that consist of the same elements
 
+    Scoring mechanism:
+    1) Begin with a score of 10
+    2) Weight by the edit distance according to parameters
+    3) Weight by the proportion that the company name occupies in the name
+    4) Weight by whether or not the domain to check is a .com domain
+
     Parameters:
         domain_to_check (Tuple[str, str]): Domain to compute phish target score for
         company_data (List[Tuple[str, str]]): List of company domains that might be targeted for phishing
@@ -122,20 +131,32 @@ def phish_target_score(domain_to_check: Tuple[str, str], company_data: List[Tupl
     Returns:
         float: Floating point score from 0 to 10 describing phish target score
     """
-    edit_distance_weightings = {0: 1, 1: 0.95, 2: 0.5}
+    # TODO: Make parameters configurable
+    edit_distance_weightings = {0: 1.2, 1: 1.1, 2: 0.5}
+    subsection_size_weighting = 0.6
     top_level_domain_same_weightings = {True: 1, False: 0.9}
     top_level_domain_is_com = {True: 0.8, False: 1}
 
-    closest_company_match, (distance, token) = min(((company, minimum_token_edit_distance(domain_to_check[0], company[0]))
-                                                    for company in company_data),
-                                                   key=lambda t: t[1])
+    # This key function implements the scoring metrics (see doc string for explanation)
+    # to ensure that the largest score is chosen from the possible scores
+    def calculate_score(company: tuple, edit_data_tuple: tuple) -> float:
 
-    score = 10 \
-            * edit_distance_weightings.get(distance, 0) \
-            * top_level_domain_same_weightings[domain_to_check[1] == closest_company_match[1]] \
-            * top_level_domain_is_com[domain_to_check[1] == ".com"]
+        company_name_proportion = len(company[0])/len(domain_to_check[0])
 
-    return score
+        score = 10
+        score *= edit_distance_weightings.get(edit_data_tuple[0], 0)
+        score *= min(company_name_proportion, 1/company_name_proportion) ** subsection_size_weighting
+        score *= top_level_domain_same_weightings[domain_to_check[1] == company[1]]
+        score *= top_level_domain_is_com[domain_to_check[1] == "com"]
+
+        return min(score, 10)
+
+    # Generator for (company_tuple, (edit_distance, token))
+    # (for an explanation of the latter part of tuple, see minimum_token_edit_distance)
+    comparisons = ((company, minimum_token_edit_distance(domain_to_check[0], company[0])) for company in company_data)
+    closest_company_match, (distance, token) = max(comparisons, key=lambda t: calculate_score(*t))
+
+    return calculate_score(closest_company_match, (distance, token))
 
 
 def string_entropy_score(domain_to_check: Tuple[str, str]) -> float:
@@ -147,6 +168,8 @@ def string_entropy_score(domain_to_check: Tuple[str, str]) -> float:
 
 
 def main():
+
+    #print(phish_target_score(("facaboaki", "com"), [("facebook", "com")]))
 
     args = parse_args()
 
