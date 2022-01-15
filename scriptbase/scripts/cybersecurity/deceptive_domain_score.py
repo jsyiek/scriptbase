@@ -9,11 +9,12 @@ from scriptbase import SCRIPTBASE_DIRECTORY
 import scriptbase.utils.algorithms.edit_distance as edit_distance
 import scriptbase.utils.file_handling.file_utils as file_utils
 
+
 REPEATED_NONALPHANUMERIC_CHARACTERS = r"(([^a-zA-Z\d\s:])\2)"
 UNNECESSARY_NUMBERS_PATTERN = r"([\d]){3,}"
 HTTP_HTTPS_PATTERN = r"(^https:\/\/www\.)|(^http:\/\/www\.)|(^https:\/\/)|(^http:\/\/)|(^www\.)"
 
-this_logger = logging.getLogger(__loader__.name)
+this_logger = logging.getLogger(__name__)
 
 def parse_args():
 
@@ -22,6 +23,12 @@ def parse_args():
     parser.add_argument("-d", "--domain", help="Domain name to compute score for", required=True)
     parser.add_argument("-c", "--company-data", help="Company data to compare against",
                         default=os.path.join(SCRIPTBASE_DIRECTORY, "examples/demo_files/company_data.csv"))
+    parser.add_argument("-q", "--quiet", help="Significantly reduces logging output; "
+                                              "just prints the score", action="store_true")
+    parser.add_argument("--see-closest-match", help="Shows the closest match even when the score is below "
+                                                    "the threshold.", action="store_true")
+    parser.add_argument("--threshold", help="Sets the threshold for declaring a website worthy of further review. "
+                                            "Defaults to 5.", default=5, type=int)
 
     return parser.parse_args()
 
@@ -110,7 +117,8 @@ def minimum_token_edit_distance(second_level_domain: str,
     return min(flattened_edit_distance_list, key=lambda t: t[0])
 
 
-def phish_target_score(domain_to_check: Tuple[str, str], company_data: List[Tuple[str, str]]) -> float:
+def phish_target_score(domain_to_check: Tuple[str, str],
+                       company_data: List[Tuple[str, str]]) -> Tuple[float, Tuple[str, str]]:
     """
     Computes the phish target score of an ordered domain tuple consisting of:
         1) second-level domain
@@ -121,7 +129,7 @@ def phish_target_score(domain_to_check: Tuple[str, str], company_data: List[Tupl
     Scoring mechanism:
     1) Begin with a score of 10
     2) Weight by the edit distance according to parameters
-    3) Weight by the proportion that the company name occupies in the name
+    3) Weight by the proportion that the company name occupies in the domain name
     4) Weight by whether or not the domain to check is a .com domain
 
     Parameters:
@@ -129,7 +137,8 @@ def phish_target_score(domain_to_check: Tuple[str, str], company_data: List[Tupl
         company_data (List[Tuple[str, str]]): List of company domains that might be targeted for phishing
 
     Returns:
-        float: Floating point score from 0 to 10 describing phish target score
+        Tuple[float, Tuple[str, str]]: Tuple of floating point score from 0 to 10 describing phish target score
+                                       and the closest company matched
     """
     # TODO: Make parameters configurable
     edit_distance_weightings = {0: 1.2, 1: 1.1, 2: 0.5}
@@ -156,7 +165,7 @@ def phish_target_score(domain_to_check: Tuple[str, str], company_data: List[Tupl
     comparisons = ((company, minimum_token_edit_distance(domain_to_check[0], company[0])) for company in company_data)
     closest_company_match, (distance, token) = max(comparisons, key=lambda t: calculate_score(*t))
 
-    return calculate_score(closest_company_match, (distance, token))
+    return calculate_score(closest_company_match, (distance, token)), closest_company_match
 
 
 def string_entropy_score(domain_to_check: Tuple[str, str]) -> float:
@@ -172,11 +181,14 @@ def main():
     args = parse_args()
 
     domain, steps = clean_input(args.domain)
-    domain = domain.split(".")
+    domain = domain.split(".", 1)
 
-    if len(domain) != 2:
+    if len(domain) < 2:
         this_logger.critical(f"Domain must contain only second-level and top-level domain! E.g. google.com")
         exit()
+
+    if "." in domain[1]:
+        this_logger.warning(f"Assuming that {domain[1]} is a top-level domain!")
 
     try:
         company_data = file_utils.get_csv_contents(args.company_data)
@@ -184,9 +196,24 @@ def main():
         this_logger.critical(f"Path does not exist: {args.company_data}")
         exit()
 
-    score = max(string_entropy_score(domain), phish_target_score(domain, company_data))
+    score, closest_company_matched = phish_target_score(domain, company_data)
+    score = round(score, 2)
 
-    print(score)
+    if args.quiet:
+        print(score)
+        exit()
+
+    this_logger.info(f"Score: {score}")
+    prompt_further_review = score >= args.threshold
+    this_logger.info(f"Prompt for further review? : {'Yes' if prompt_further_review else 'No'}")
+
+    if prompt_further_review or args.see_closest_match:
+        distance, further_steps = edit_distance.describe_edit_distance(domain[0], closest_company_matched[0])
+        steps += edit_distance.visualize_steps(domain[0], further_steps)
+        steps.append(("Matches: ", f"'{closest_company_matched[0]}'"))
+
+        for step, i in zip(steps, range(1, len(steps) + 1)):
+            this_logger.info(f"{i}) {step[0]}: {step[1]}")
 
 if __name__ == "__main__":
     main()

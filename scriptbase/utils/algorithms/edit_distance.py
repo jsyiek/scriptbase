@@ -114,7 +114,7 @@ def describe_edit_distance(a: str, b: str) -> Tuple[int, tuple]:
 
         # Base cases where x or y has been reduced to emptiness
         if not x:
-            remaining_steps = tuple(("+", missing_char, -1) for missing_char in y)
+            remaining_steps = tuple(("+", missing_char, i) for missing_char, i in zip(y, range(len(y))))
             dynamic_values[(x, y)] = (len(remaining_steps), remaining_steps)
             return dynamic_values[(x, y)]
         if not y:
