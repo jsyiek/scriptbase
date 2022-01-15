@@ -65,8 +65,13 @@ def minimum_token_edit_distance(second_level_domain: str,
 
 
 if __name__ == "__main__":
-    print(edit_distance.describe_edit_distance("ax", "a-x"))
-    print(edit_distance.numeric_edit_distance("ax", "a-x"))
+    starting_string = "Doctor Strange"
+    target_string = "Strange Supreme"
+    distance, steps = edit_distance.describe_edit_distance(starting_string, target_string)
+    print(edit_distance.visualize_steps(starting_string, steps))
+    # print(edit_distance.collapse_steps(edit_distance.describe_edit_distance("DStrange", "Strange")[1]))
+    # print(edit_distance.describe_edit_distance("american-express", "americanexpress"))
+    # print(edit_distance.numeric_edit_distance("americanexpress", "american-express"))
     # import datetime
     # now = datetime.datetime.now()
     # print(minimum_token_edit_distance("ebay-update", "ebay"))
