@@ -169,8 +169,6 @@ def string_entropy_score(domain_to_check: Tuple[str, str]) -> float:
 
 def main():
 
-    #print(phish_target_score(("facaboaki", "com"), [("facebook", "com")]))
-
     args = parse_args()
 
     domain, steps = clean_input(args.domain)
