@@ -58,9 +58,11 @@ def describe_edit_distance(a: str, b: str) -> Tuple[int, tuple]:
     Commands:
     + -> Insertion (Character is the character being added)
     - -> Deletion (Character is the character being remove)
-    * -> Substitution (Character is the character being substitude)
+    * -> Substitution (Character is the character being substituted)
 
-    The index assumes all previous commands have already been processed
+    E.g. ("+", "a", 0)
+
+    The index of a particular step assumes all previous steps have already been processed
 
     Parameters:
         a (str): Starting string
@@ -102,12 +104,15 @@ def describe_edit_distance(a: str, b: str) -> Tuple[int, tuple]:
     def descriptive_edit_distance_dynamic(x: str, y: str):
         """
         Helper function that allows for the dynamic programming implementation
-        of the Levenshtein distance
+        of the Levenshtein distance.
+
+        It calculates the conversion of x into y
         """
 
         if (x, y) in dynamic_values:
             return dynamic_values[(x, y)]
 
+        # Base cases where x or y has been reduced to emptiness
         if not x:
             remaining_steps = tuple(("+", missing_char, -1) for missing_char in y)
             dynamic_values[(x, y)] = (len(remaining_steps), remaining_steps)
@@ -117,7 +122,8 @@ def describe_edit_distance(a: str, b: str) -> Tuple[int, tuple]:
             dynamic_values[(x, y)] = (len(remaining_steps), remaining_steps)
             return dynamic_values[(x, y)]
 
-        # First two characters are the same so change nothing
+        # First two characters are the same so no need to change anything
+        # Can progress to next value
         if x[0] == y[0]:
             dynamic_values[(x, y)] = add_step(descriptive_edit_distance_dynamic(x[1:], y[1:]))
             return dynamic_values[(x, y)]
