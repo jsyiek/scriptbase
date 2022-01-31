@@ -57,7 +57,7 @@ def describe_edit_distance(a: str, b: str) -> Tuple[int, tuple]:
 
     Commands:
     + -> Insertion (Character is the character being added)
-    - -> Deletion (Character is the character being remove)
+    - -> Deletion (Character is the character being removed)
     * -> Substitution (Character is the character being substituted)
 
     E.g. ("+", "a", 0)
