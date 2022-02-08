@@ -1,3 +1,4 @@
+import csv
 import os
 
 from typing import List
@@ -26,3 +27,20 @@ def recursive_file_grab(file_extensions: List[str], folder_to_search: str) -> Li
 
     return return_list
 
+
+def get_csv_contents(csv_path: str) -> List[List]:
+    """
+    Reads the contents from a csv and returns the results
+
+    Parameters:
+        csv_path (str): Path to CSV
+
+    Returns:
+        List[List]: List of lists, with each sub-list corresponding to a row of the CSV
+    """
+
+    with open(csv_path, "r") as F:
+
+        csv_file = csv.reader(F)
+
+        return [line for line in csv_file]
